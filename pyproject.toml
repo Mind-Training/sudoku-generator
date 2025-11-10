@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sudokugen"
+version = "0.1.0"
+description = "Private Sudoku generator with original difficulty logic and CSV export"
+authors = [{ name = "Dani Gracia" }]
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+keywords = ["sudoku", "generator", "puzzle", "difficulty"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[project.urls]
+Homepage = "https://github.com/Mind-Training/sudokugen"
+Repository = "https://github.com/Mind-Training/sudokugen"
+
+[tool.setuptools]
+packages = ["sudokugen"]
+
+[tool.setuptools.package-data]
+sudokugen = ["*.py"]
+
+# --- GitHub Packages configuration (Organization: Mind-Training) ---
+[tool.twine]
+repository-url = "https://api.github.com/orgs/Mind-Training/packages/pypi/upload"
