@@ -1,12 +1,14 @@
-name: Sudoku Generator (Private – GitHub Packages)
+name: Sudoku Generator
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write 
+  packages: write  
 
 jobs:
   build-and-upload-ghpkgs:
@@ -29,16 +31,14 @@ jobs:
       - name: Build (sdist + wheel)
         run: python -m build
 
-      - name: Twine check (metadata)
+      - name: Validate package metadata
         run: python -m twine check dist/*
 
-      # Publica en GitHub Packages (Python registry)
-      # Para ORGANIZACIÓN:
-      - name: Upload to GitHub Packages
+      - name: Upload to GitHub Packages (Mind-Training)
         env:
           TWINE_USERNAME: ${{ github.actor }}
           TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python -m twine upload \
-            --repository-url "https://api.github.com/orgs/${{ github.repository_owner }}/packages/pypi/upload" \
+            --repository-url "https://api.github.com/orgs/Mind-Training/packages/pypi/upload" \
             dist/*
