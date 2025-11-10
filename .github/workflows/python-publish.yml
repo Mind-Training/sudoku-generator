@@ -30,15 +30,3 @@ jobs:
 
       - name: Build (sdist + wheel)
         run: python -m build
-
-      - name: Validate package metadata
-        run: python -m twine check dist/*
-
-      - name: Upload to GitHub Packages (Mind-Training)
-        env:
-          TWINE_USERNAME: ${{ github.actor }}
-          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python -m twine upload \
-            --repository-url "https://api.github.com/orgs/Mind-Training/packages/pypi/upload" \
-            dist/*
