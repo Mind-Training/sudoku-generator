@@ -28,9 +28,7 @@ Homepage = "https://github.com/Mind-Training/sudoku-generator"
 Repository = "https://github.com/Mind-Training/sudoku-generator"
 
 [tool.setuptools]
-# Descubrimiento automático del paquete "sudokugen" y submódulos
 packages = { find = { include = ["sudokugen*"] } }
 
 [tool.setuptools.package-data]
-# Por si en el futuro añades ficheros adicionales (datos/plantillas)
 sudokugen = ["*.py"]
