@@ -1,34 +1,28 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"
 
-[project]
+[tool.poetry]
 name = "sudokugen"
 version = "0.1.0"
 description = "Sudoku Generator"
-authors = [{ name = "Dani Gracia" }]
+authors = ["Dani Gracia"]
 readme = "README.md"
-requires-python = ">=3.8"
-license = { text = "MIT" }
+license = "MIT"
+packages = [{ include = "sudokugen" }]
 keywords = ["sudoku", "generator", "puzzle", "difficulty"]
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent"
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
 ]
 
-[project.urls]
+[tool.poetry.urls]
 Homepage = "https://github.com/Mind-Training/sudoku-generator"
 Repository = "https://github.com/Mind-Training/sudoku-generator"
-
-[tool.setuptools]
-packages = { find = { include = ["sudokugen*"] } }
-
-[tool.setuptools.package-data]
-sudokugen = ["*.py"]

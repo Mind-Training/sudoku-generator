@@ -58,3 +58,6 @@ _build/
 *.db
 *.tgz
 *.whl
+
+usage_example.py
+*.csv
