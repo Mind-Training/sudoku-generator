@@ -10,7 +10,7 @@ import csv
 from datetime import date as Date, datetime, timedelta
 from typing import Iterable, List, Dict, Optional, Union
 
-from .sudoku_board import SudokuBoard, MiniSudokuBoard6x6
+from .sudoku_board import SudokuBoard, MiniSudokuBoard6x6, MiniSudokuBoard4x4
 
 _LEVEL_MAP = {0: "easy", 1: "medium", 2: "hard", 3: "expert"}
 
@@ -36,6 +36,7 @@ def generateSudokus(
 
     - size=9 → sudoku clásico 9x9 usando SudokuBoard.generateGameBoardByDifficulty
     - size=6 → mini-sudoku 6x6 (bloques 2x3, números 1-6, 8-12 pistas, solución única)
+    - size=4 → mini-sudoku 4x4 (bloques 2x2, números 1-4, 7-9 pistas, solución única)
 
     Returns a list of dictionaries:
       { "level": "0|1|2|3", "board": "<N lines with #>", "solution": "<N lines with digits>" }
@@ -44,8 +45,8 @@ def generateSudokus(
         raise ValueError("level must be one of {0,1,2,3}")
     if number <= 0:
         return []
-    if size not in (6, 9):
-        raise ValueError("size must be either 6 or 9")
+    if size not in (4, 6, 9):
+        raise ValueError("size must be one of {4, 6, 9}")
 
     level_str = _LEVEL_MAP[level]
     out: List[Dict[str, str]] = []
@@ -58,7 +59,7 @@ def generateSudokus(
                 level=level_str,
                 rng_seed=rng_seed,
             )
-        else:
+        elif size == 6:
             # Mini-sudoku 6x6:
             # - Bloques 2x3 (3 columnas de bloques x 2 filas de bloques)
             # - Números 1..6
@@ -73,8 +74,22 @@ def generateSudokus(
                 clue_max=12,
                 rng_seed=per_seed,
             )
+        else:
+            # Mini-sudoku 4x4:
+            # - Bloques 2x2
+            # - Números 1..4
+            # - Entre 7 y 9 pistas
+            sb = MiniSudokuBoard4x4()
+            per_seed = None
+            if rng_seed is not None:
+                per_seed = rng_seed + i
+            full_board, puzzle_board = sb.generate_puzzle(
+                clue_min=7,
+                clue_max=9,
+                rng_seed=per_seed,
+            )
 
-        # `board` → matriz (6x6 o 9x9) a string multilínea con '#'
+        # `board` → matriz (4x4, 6x6 o 9x9) a string multilínea con '#'
         puzzle_str = _grid_to_multiline_string(puzzle_board.board, empty_char="#")
         # `solution` → misma matriz pero sin ceros (no debería haberlos)
         solution_str = _grid_to_multiline_string(full_board.board, empty_char="#").replace("#", "")
