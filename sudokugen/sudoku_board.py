@@ -675,3 +675,163 @@ class SudokuBoard:
         if best_puzzle is not None:
             return fullBoard, best_puzzle
         return fullBoard, copy.deepcopy(self)
+
+class MiniSudokuBoard6x6:
+    """
+    Mini-sudoku 6x6:
+    - Size 6x6
+    - Blocks of 2x3 (2 rows x 3 columns)
+    - Numbers from 1 to 6
+    - Generates full boards and puzzles with a unique solution
+    """
+
+    SIZE = 6
+    BOX_ROWS = 2
+    BOX_COLS = 3
+
+    def __init__(self, board=None):
+        self.board = [[0 for _ in range(self.SIZE)] for _ in range(self.SIZE)]
+        if board:
+            if len(board) != self.SIZE * self.SIZE:
+                raise ValueError("Board string must have length 36 for 6x6 mini sudoku")
+            for i in range(self.SIZE):
+                for j in range(self.SIZE):
+                    self.board[i][j] = int(board[i * self.SIZE + j])
+
+    # --- Internal utilities ---
+
+    def _find_empty(self, b):
+        for r in range(self.SIZE):
+            for c in range(self.SIZE):
+                if b[r][c] == 0:
+                    return r, c
+        return None
+
+    def _is_valid(self, b, r, c, n):
+        # Row
+        if any(b[r][cc] == n for cc in range(self.SIZE)):
+            return False
+        # Column
+        if any(b[rr][c] == n for rr in range(self.SIZE)):
+            return False
+        # 2x3 block
+        br = (r // self.BOX_ROWS) * self.BOX_ROWS
+        bc = (c // self.BOX_COLS) * self.BOX_COLS
+        for rr in range(br, br + self.BOX_ROWS):
+            for cc in range(bc, bc + self.BOX_COLS):
+                if b[rr][cc] == n:
+                    return False
+        return True
+
+    def _solve_backtracking(self, b):
+        empty = self._find_empty(b)
+        if not empty:
+            return True
+        r, c = empty
+        nums = list(range(1, self.SIZE + 1))
+        random.shuffle(nums)
+        for n in nums:
+            if self._is_valid(b, r, c, n):
+                b[r][c] = n
+                if self._solve_backtracking(b):
+                    return True
+                b[r][c] = 0
+        return False
+
+    # --- Generate full board ---
+
+    def generate_full_board(self, rng_seed=None):
+        if rng_seed is not None:
+            random.seed(rng_seed)
+        self.board = [[0 for _ in range(self.SIZE)] for _ in range(self.SIZE)]
+        self._solve_backtracking(self.board)
+
+    # --- Solution counting to ensure uniqueness ---
+
+    def _count_solutions(self, limit=None):
+        solutions = 0
+        b = [row[:] for row in self.board]
+
+        def backtrack():
+            nonlocal solutions
+            if limit is not None and solutions >= limit:
+                return
+            empty = self._find_empty(b)
+            if not empty:
+                solutions += 1
+                return
+            r, c = empty
+            for n in range(1, self.SIZE + 1):
+                if self._is_valid(b, r, c, n):
+                    b[r][c] = n
+                    backtrack()
+                    b[r][c] = 0
+
+        backtrack()
+        return solutions
+
+    def has_unique_solution(self):
+        """True if the puzzle has exactly one solution."""
+        return self._count_solutions(limit=2) == 1
+
+    # --- Generate 6x6 puzzle with 8-12 clues and unique solution ---
+
+    def generate_puzzle(self, clue_min=8, clue_max=12, max_tries=200, rng_seed=None):
+        """
+        Generate a 6x6 puzzle with:
+        - unique solution
+        - number of clues between clue_min and clue_max (default 8-12)
+        Returns (fullBoard, puzzleBoard), both MiniSudokuBoard6x6.
+        """
+        if clue_min > clue_max:
+            raise ValueError("clue_min must be <= clue_max")
+
+        last_full = None
+
+        for attempt in range(max_tries):
+            if rng_seed is not None:
+                # vary the seed per attempt to avoid identical puzzles
+                random.seed(rng_seed + attempt)
+
+            self.generate_full_board()
+            full = copy.deepcopy(self)
+            last_full = full
+
+            positions = [(r, c) for r in range(self.SIZE) for c in range(self.SIZE)]
+            random.shuffle(positions)
+            clues = self.SIZE * self.SIZE  # start fully filled (36 clues)
+
+            for (r, c) in positions:
+                if clues <= clue_min:
+                    break
+                keep = self.board[r][c]
+                if keep == 0:
+                    continue
+                self.board[r][c] = 0
+
+                if self.has_unique_solution():
+                    clues -= 1
+                    # continue trying to remove more, but not below clue_min
+                    # and trying to approach clue_max or less
+                    if clue_min <= clues <= clue_max:
+                        # don't force-stop; let the loop continue
+                        # while uniqueness holds and we don't go below clue_min
+                        continue
+                else:
+                    # would break uniqueness -> undo
+                    self.board[r][c] = keep
+
+            final_clues = sum(
+                1 for r in range(self.SIZE) for c in range(self.SIZE) if self.board[r][c] != 0
+            )
+
+            if clue_min <= final_clues <= clue_max and self.has_unique_solution():
+                return full, copy.deepcopy(self)
+
+        # Fallback: if we didn't achieve the range after max_tries,
+        # return the last attempt (it will still have a unique solution).
+        if last_full is None:
+            # very unlikely, but safe fallback
+            self.generate_full_board()
+            last_full = copy.deepcopy(self)
+        return last_full, copy.deepcopy(self)

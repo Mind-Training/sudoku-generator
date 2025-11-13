@@ -10,40 +10,74 @@ import csv
 from datetime import date as Date, datetime, timedelta
 from typing import Iterable, List, Dict, Optional, Union
 
-from .sudoku_board import SudokuBoard 
+from .sudoku_board import SudokuBoard, MiniSudokuBoard6x6
 
 _LEVEL_MAP = {0: "easy", 1: "medium", 2: "hard", 3: "expert"}
 
 def _grid_to_multiline_string(grid, empty_char: str = "#") -> str:
-    """Convert the 9x9 matrix (ints) to 9 lines, using '#' for zeros."""
+    """Convert a square matrix (6x6, 9x9, ...) to N lines, using '#' for zeros."""
+    size = len(grid)
     lines = []
-    for r in range(9):
-        line = "".join(str(grid[r][c]) if grid[r][c] != 0 else empty_char for c in range(9))
+    for r in range(size):
+        line = "".join(str(grid[r][c]) if grid[r][c] != 0 else empty_char for c in range(size))
         lines.append(line)
     return "\n".join(lines)
 
-def generateSudokus(number: int, level: int, *, rng_seed: Optional[int] = None) -> List[Dict[str, str]]:
+
+def generateSudokus(
+    number: int,
+    level: int,
+    *,
+    rng_seed: Optional[int] = None,
+    size: int = 9,
+) -> List[Dict[str, str]]:
     """
-    Generate `number` sudokus of difficulty `level` (0..3) using the ORIGINAL
-    `generateGameBoardByDifficulty` generator from SudokuBoard.
+    Generate `number` sudokus of difficulty `level` (0..3).
+
+    - size=9 → sudoku clásico 9x9 usando SudokuBoard.generateGameBoardByDifficulty
+    - size=6 → mini-sudoku 6x6 (bloques 2x3, números 1-6, 8-12 pistas, solución única)
+
     Returns a list of dictionaries:
-      { "level": "0|1|2|3", "board": "<9 lines with #>", "solution": "<9 lines with digits>" }
+      { "level": "0|1|2|3", "board": "<N lines with #>", "solution": "<N lines with digits>" }
     """
     if level not in _LEVEL_MAP:
         raise ValueError("level must be one of {0,1,2,3}")
     if number <= 0:
         return []
+    if size not in (6, 9):
+        raise ValueError("size must be either 6 or 9")
 
     level_str = _LEVEL_MAP[level]
     out: List[Dict[str, str]] = []
 
-    for _ in range(number):
-        sb = SudokuBoard()
-        full_board, puzzle_board = sb.generateGameBoardByDifficulty(level=level_str, rng_seed=rng_seed)
+    for i in range(number):
+        if size == 9:
+            # Sudoku clásico, dejamos TODO igual que antes
+            sb = SudokuBoard()
+            full_board, puzzle_board = sb.generateGameBoardByDifficulty(
+                level=level_str,
+                rng_seed=rng_seed,
+            )
+        else:
+            # Mini-sudoku 6x6:
+            # - Bloques 2x3 (3 columnas de bloques x 2 filas de bloques)
+            # - Números 1..6
+            # - Entre 8 y 12 pistas
+            sb = MiniSudokuBoard6x6()
+            per_seed = None
+            if rng_seed is not None:
+                # pequeña variación por sudoku para no repetir siempre el mismo
+                per_seed = rng_seed + i
+            full_board, puzzle_board = sb.generate_puzzle(
+                clue_min=8,
+                clue_max=12,
+                rng_seed=per_seed,
+            )
 
-        # puzzle_board and full_board are instances of SudokuBoard with .board (9x9 list)
+        # `board` → matriz (6x6 o 9x9) a string multilínea con '#'
         puzzle_str = _grid_to_multiline_string(puzzle_board.board, empty_char="#")
-        solution_str = _grid_to_multiline_string(full_board.board, empty_char="#").replace("#", "")  # 81 digits in 9 lines
+        # `solution` → misma matriz pero sin ceros (no debería haberlos)
+        solution_str = _grid_to_multiline_string(full_board.board, empty_char="#").replace("#", "")
 
         out.append({
             "level": str(level),
