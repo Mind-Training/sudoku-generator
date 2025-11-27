@@ -680,14 +680,14 @@ class MiniSudokuBoard6x6:
     """
     Mini-sudoku 6x6:
     - Size 6x6
-    - Blocks of 2x3 (2 rows x 3 columns)
+    - Blocks of 3x2 (3 rows x 2 columns)
     - Numbers from 1 to 6
     - Generates full boards and puzzles with a unique solution
     """
 
     SIZE = 6
-    BOX_ROWS = 2
-    BOX_COLS = 3
+    BOX_ROWS = 3
+    BOX_COLS = 2
 
     def __init__(self, board=None):
         self.board = [[0 for _ in range(self.SIZE)] for _ in range(self.SIZE)]
